@@ -8,9 +8,9 @@ This is performed with a pair of Python scripts, one running on the dedicated se
 ## Server
 Tested with Python 3.10.4 on Ubuntu 22.04.1 LTS.
 
-Usage: ./save_monitor_server.py [-h] --fgpath FGPATH [--port PORT]
+Usage: **./save_monitor_server.py [-h] --fgpath FGPATH [--port PORT]**
 
-Example: ./save_monitor_server.py --fgpath /home/steam/SatisfactoryDedicatedServer/FactoryGame --port 15001
+Example: **./save_monitor_server.py --fgpath /home/steam/SatisfactoryDedicatedServer/FactoryGame --port 15001**
 
 You may need to poke a hole through your firewall for the port (default 15001).
 The server is 100% unidirectional (with the exception of the standard TCP protocol exchange).  The server excepts no data from the client.
@@ -30,9 +30,9 @@ To see the status:  sudo systemctl status save_monitor_server
 ## Client
 Tested with Python 3.9.7 on Windows 10.
 
-Usage: python save_monitor_client.py [-h] --address ADDRESS [--port PORT]
+Usage: **python save_monitor_client.py [-h] --address ADDRESS [--port PORT]**
 
-Example: python save_monitor_client.py --address 1.2.3.4 --port 15001
+Example: **python save_monitor_client.py --address 1.2.3.4 --port 15001**
 
 The client will display a countdown until the save.
 When the save starts, the client will make a short peep noise and print SAVING.  Then the client will countdown until the save is completed.

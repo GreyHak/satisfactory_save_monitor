@@ -1,7 +1,7 @@
 # Satisfactory Save Monitor
 A tool to notify Satisfactory players when a save is going to occur on the server, providing a countdown until the next save, and a countdown until the save completes.
 
-These scripts were written because players need to be cautious during saves when playing on Satisfactory servers remotely.  The game does not prevent remote players from performing actions which may get them in trouble (e.g. dead) when the save completes.  I have reported this issue to Coffee Stain Studios as [ticket 63056942ca608e080351c6b6|https://questions.satisfactorygame.com/post/63056942ca608e080351c6b6].
+These scripts were written because players need to be cautious during saves when playing on Satisfactory servers remotely.  The game does not prevent remote players from performing actions which may get them in trouble (e.g. dead) when the save completes.  I have reported this issue to Coffee Stain Studios as [ticket 63056942ca608e080351c6b6](https://questions.satisfactorygame.com/post/63056942ca608e080351c6b6).
 
 This is performed with a pair of Python scripts, one running on the dedicated server and a client running on the player's machine.
 

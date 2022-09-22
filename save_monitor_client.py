@@ -53,7 +53,7 @@ def statusDisplayThread():
 			if globalStatus_savingFlag:
 				print(f"Server is in the process of saving.  Expected to complete at {globalStatus_predictedSaveEndTime} based on last save that took {globalStatus_lastSaveTimeLength} seconds.  Next save expected to start at {globalStatus_predictedNextSaveStartTime} (local time) based on {globalStatus_autosaveInterval} second interval.")
 			else:
-				print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+				print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 				print(f"Server save completed.  Save took {globalStatus_lastSaveTimeLength} seconds.  Next save expected to start at {globalStatus_predictedNextSaveStartTime} (local time) based on {globalStatus_autosaveInterval} second interval and end at {globalStatus_predictedSaveEndTime}.\n")
 			lastStatusDisplayed = globalStatus_increment
 		elif lastStatusDisplayed > 0:

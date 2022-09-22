@@ -11,6 +11,7 @@
 #
 
 import argparse
+import os
 import socket
 import threading
 import time
@@ -52,7 +53,7 @@ def statusMonitorThread():
 					break;
 				if line.startswith('mFloatValues=(("FG.AutosaveInterval", ', 0):
 					globalStatus_mutex.acquire()
-					globalStatus_autosaveInterval = float(line[38:len(line)-3])
+					globalStatus_autosaveInterval = float(line[38:-3])
 					print(f"Loaded user setting for autosave interval, {globalStatus_autosaveInterval} seconds")
 					globalStatus_mutex.release()
 			usrFile.close()
@@ -63,19 +64,33 @@ def statusMonitorThread():
 	if not logFile:
 		print("Failed to open log file")
 	else:
+		lastLogoffTime = None
+		saveTriggeredFollowingLogoff = False
+		storedNextSaveStartTime = None
+		storedSaveEndTime = None
+
+		logFileSizeAtLastRead = 0
 		while True:
+			currentLogFileSize = os.path.getsize(logFilename)
 			line = logFile.readline()
 			if not line:
+				if currentLogFileSize < logFileSizeAtLastRead:
+					print("Log file is smaller than it was at the last successful read.  Reopening log file.")
+					logFile.close()
+					logFile = open(logFilename, "r")
 				time.sleep(1)
 				continue
+			logFileSizeAtLastRead = currentLogFileSize
+
 			isLogin = line.startswith("LogNet: Join succeeded: ", 30)
+			isLogoff = line.startswith("LogNet: UChannel::Close: Sending CloseBunch.", 30)
 			isAutosaveReconfig = line.startswith('LogServerConnection: FG.AutosaveInterval = "', 30)
 			isSave1 = line.startswith("LogGame: World Serialization (save): ", 30)
-			isSave2 = line.startswith("LogGame: Compression: ", 30)
-			isSave3 = line.startswith("LogGame: Write To Disk: ", 30)
-			isSave4 = line.startswith("LogGame: Write Backup to Disk and Cleanup time: ", 30)
+			#isSave2 = line.startswith("LogGame: Compression: ", 30)
+			#isSave3 = line.startswith("LogGame: Write To Disk: ", 30)
+			#isSave4 = line.startswith("LogGame: Write Backup to Disk and Cleanup time: ", 30)
 			isSaveDone = line.startswith("LogGame: Total Save Time took ", 30)
-			if isLogin or isAutosaveReconfig or isSave1 or isSaveDone:
+			if isLogin or isLogoff or isAutosaveReconfig or isSave1 or isSaveDone:
 				year = int(line[1:5])
 				month = int(line[6:8])
 				day = int(line[9:11])
@@ -84,8 +99,9 @@ def statusMonitorThread():
 				seconds = int(line[18:20])
 				milliseconds = int(line[21:24])
 				timestamp = datetime(year, month, day, hour, minutes, seconds, milliseconds * 1000, timezone.utc)
+
 				if isLogin:
-					print(timestamp, "Login")
+					print(timestamp, f"Player Login: {line[54:-1]}\n")
 					if globalStatus_predictedNextSaveStartTime:
 						globalStatus_mutex.acquire()
 						if globalStatus_predictedSaveEndTime < datetime.now(timezone.utc):
@@ -95,16 +111,28 @@ def statusMonitorThread():
 							globalStatus_predictedSaveEndTime = globalStatus_predictedNextSaveStartTime + timedelta(seconds=totalSaveTimeThisTime)
 							print(f"Predicted next save in past.  Save to end at {globalStatus_predictedSaveEndTime} with next save at {globalStatus_predictedNextSaveStartTime}\n")
 						globalStatus_mutex.release()
+				elif isLogoff:
+					print(timestamp, "Player Logoff\n")
+					lastLogoffTime = timestamp
 				elif isAutosaveReconfig:
 					print(f"DEBUG: {line}")
-					print(f"DEBUG: {line[104:len(line)-2]}")
+					print(f"DEBUG: {line[104:-2]}")
 					globalStatus_mutex.acquire()
-					globalStatus_autosaveInterval = float(line[104:len(line)-2])
+					globalStatus_autosaveInterval = float(line[104:-2])
 					print(timestamp, f"Operator changed autosave interval to {globalStatus_autosaveInterval} seconds")
 					globalStatus_mutex.release()
 				elif isSave1:
-					saveTimeSoFar = float(line[67:len(line)-9])
+					saveTimeSoFar = float(line[67:-9])
 					print(timestamp, f"Save detected. Saving for {saveTimeSoFar} seconds so far.")
+
+					if lastLogoffTime and timestamp - lastLogoffTime < timedelta(seconds=(globalStatus_lastSaveTimeLength*1.25)):
+						print("This save is being interpreted as result of a player logoff which will not reset the save period.")
+						saveTriggeredFollowingLogoff = True
+						storedNextSaveStartTime = globalStatus_predictedNextSaveStartTime
+						storedSaveEndTime = globalStatus_predictedSaveEndTime
+					else:
+						saveTriggeredFollowingLogoff = False
+
 					globalStatus_mutex.acquire()
 					globalStatus_increment += 1
 					globalStatus_savingFlag = True
@@ -115,14 +143,19 @@ def statusMonitorThread():
 					print(f"Save to end at {globalStatus_predictedSaveEndTime} with next save at {globalStatus_predictedNextSaveStartTime}")
 					globalStatus_mutex.release()
 				elif isSaveDone:
-					totalSaveTimeThisTime = float(line[60:len(line)-9])
+					totalSaveTimeThisTime = float(line[60:-9])
 					print(timestamp, f"Save completed after {totalSaveTimeThisTime} seconds.")
 					globalStatus_mutex.acquire()
 					globalStatus_increment += 1
 					globalStatus_savingFlag = False
 					#print(f"Calculated start time {timestamp - timedelta(seconds=totalSaveTimeThisTime)}")
-					globalStatus_predictedNextSaveStartTime = timestamp + timedelta(seconds=globalStatus_autosaveInterval)
-					globalStatus_predictedSaveEndTime = globalStatus_predictedNextSaveStartTime + timedelta(seconds=totalSaveTimeThisTime)
+					if saveTriggeredFollowingLogoff:
+						print("Restoring save interval from before player logoff")
+						globalStatus_predictedNextSaveStartTime = storedNextSaveStartTime
+						globalStatus_predictedSaveEndTime = storedSaveEndTime
+					else:
+						globalStatus_predictedNextSaveStartTime = timestamp + timedelta(seconds=globalStatus_autosaveInterval)
+						globalStatus_predictedSaveEndTime = globalStatus_predictedNextSaveStartTime + timedelta(seconds=totalSaveTimeThisTime)
 					globalStatus_lastSaveTimeLength = totalSaveTimeThisTime
 					print(f"Next save from {globalStatus_predictedNextSaveStartTime} to {globalStatus_predictedSaveEndTime}\n")
 					globalStatus_mutex.release()
@@ -162,7 +195,10 @@ def statusTxThread(localSocket, clientAddress):
 		statusData += struct.pack("<I", predictedSaveEndTimeInMs)
 		statusData += struct.pack("<f", localStatus_autosaveInterval)
 		statusData += struct.pack("<f", localStatus_lastSaveTimeLength)
-		localSocket.send(statusData)
+		try:
+			localSocket.send(statusData)
+		except BrokenPipeError:
+			break
 		lastStatusSent = localStatus_increment
 		print("Sent status")
 	localSocket.close()

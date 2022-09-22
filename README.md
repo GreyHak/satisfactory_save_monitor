@@ -5,8 +5,13 @@ These scripts were written because players need to be cautious during saves when
 
 This is performed with a pair of Python scripts, one running on the dedicated server and a client running on the player's machine.
 
+## The issue addressed by this tool
+
+When the player performs actions during a save not all these actions will take effect when the save completes.  If the world is large enough, some of the player's actions performed during the save will likely be lost.  This creates a discontinuity between what the player thinks is happening and what the server actually performs.  As a result, the movement which a player performs may never take effect.  This means, if a player walks toward the edge of a cliff, then during the save turns and walks away from the cliff, immediately after the save, while the player thinks they're walking away from the cliff, they actually walk right off the cliff.  This scenario can be especially bad when working along the edge of the abyss.
+
 ## Server
 Tested with Python 3.10.4 on Ubuntu 22.04.1 LTS.
+Tested with Satisfactory v0.6.0.15 (#201145) (9/15/2022).
 
 Usage: **./save_monitor_server.py [-h] --fgpath FGPATH [--port PORT]**
 
@@ -26,6 +31,8 @@ To install and start the server as a daemon:
 - sudo systemctl start save_monitor_server
 
 To see the status:  sudo systemctl status save_monitor_server
+To stop the daemon until next reboot:  sudo systemctl stop save_monitor_server
+To stop the daemon, persistent through reboot:  sudo systemctl disable save_monitor_server
 
 ## Client
 Tested with Python 3.9.7 on Windows 10.
@@ -41,6 +48,9 @@ Terminate the client with Ctrl+Break.
 
 ![Client Screenshot](https://raw.githubusercontent.com/GreyHak/satisfactory_save_monitor/master/client_screenshot.jpg)
 
-# Acknowledgement
+# Limitations
+This tool approximates the save time based on log entries and the autosave interval configuration file.  It does not communicate with the game directly.  So somes times and some actions are approximated.
+This tool assumes that saves immediately following a player logging off are a result of the player logging off, and won't reset the save interval as a result.
 
+# Acknowledgement
 My thanks to Bigkahuna (Bigkahuna666#0861 on discord) for allowing me to test this save_monitor_server on his server!

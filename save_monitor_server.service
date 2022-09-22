@@ -1,0 +1,11 @@
+[Unit]
+Description=Satisfactory save monitor server
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/python3 /root/save_monitor_server.py --fgpath /home/steam/SatisfactoryDedicatedServer/FactoryGame
+
+[Install]
+WantedBy=multi-user.target

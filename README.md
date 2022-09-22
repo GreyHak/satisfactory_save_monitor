@@ -18,6 +18,7 @@ Usage: **./save_monitor_server.py [-h] --fgpath FGPATH [--port PORT]**
 Example: **./save_monitor_server.py --fgpath /home/steam/SatisfactoryDedicatedServer/FactoryGame --port 15001**
 
 You may need to poke a hole through your firewall for the port (default 15001).
+
 The server is 100% unidirectional (with the exception of the standard TCP protocol exchange).  The server excepts no data from the client.
 
 ### Running the server as a daemon
@@ -50,7 +51,12 @@ Terminate the client with Ctrl+Break.
 
 # Limitations
 This tool approximates the save time based on log entries and the autosave interval configuration file.  It does not communicate with the game directly.  So somes times and some actions are approximated.
+
 This tool assumes that saves immediately following a player logging off are a result of the player logging off, and won't reset the save interval as a result.
+
+If the server is configured not to run when there are no players on, and the last player logs off, the tool doesn't know the next save is never going to happen.  The client will think the nex save happens, and will track is to completion, and then go silent until it hears from the server again.
+
+If the server is configured not to run when there are no players on, and the first player logs on after a save interval, the tool is smart enough to know when the next save occurs, but its estimate is less precise than normal.  It's also unable to accurately predict the save when the first player logs in within a save interval of the last logoff, but it will resync.
 
 # Acknowledgement
 My thanks to Bigkahuna (Bigkahuna666#0861 on discord) for allowing me to test this save_monitor_server on his server!

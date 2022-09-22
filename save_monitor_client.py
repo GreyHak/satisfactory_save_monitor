@@ -31,6 +31,17 @@ globalStatus_predictedSaveEndTime = None
 globalStatus_autosaveInterval = 300.0  # (seconds) Default to 5 minutes
 globalStatus_lastSaveTimeLength = 0
 
+def printSaving():
+	print("##############################################################################")
+	print(" .oooooo..o       .o.       oooooo     oooo ooooo ooooo      ooo   .oooooo.   ")
+	print("d8P'    `Y8      .888.       `888.     .8'  `888' `888b.     `8'  d8P'  `Y8b  ")
+	print("Y88bo.          .8\"888.       `888.   .8'    888   8 `88b.    8  888          ")
+	print(" `\"Y8888o.     .8' `888.       `888. .8'     888   8   `88b.  8  888          ")
+	print("     `\"Y88b   .88ooo8888.       `888.8'      888   8     `88b.8  888     ooooo")
+	print("oo     .d8P  .8'     `888.       `888'       888   8       `888  `88.    .88' ")
+	print("8\"\"88888P'  o88o     o8888o       `8'       o888o o8o        `8   `Y8bood8P'  ")
+	print("##############################################################################")
+
 def statusDisplayThread():
 
 	global globalStatus_mutex
@@ -62,15 +73,7 @@ def statusDisplayThread():
 				globalStatus_savingFlag = True
 				globalStatus_predictedSaveEndTime = globalStatus_predictedNextSaveStartTime + timedelta(seconds=globalStatus_lastSaveTimeLength)
 				globalStatus_predictedNextSaveStartTime += timedelta(seconds=(globalStatus_autosaveInterval + globalStatus_lastSaveTimeLength))
-				print("##############################################################################")
-				print(" .oooooo..o       .o.       oooooo     oooo ooooo ooooo      ooo   .oooooo.   ")
-				print("d8P'    `Y8      .888.       `888.     .8'  `888' `888b.     `8'  d8P'  `Y8b  ")
-				print("Y88bo.          .8\"888.       `888.   .8'    888   8 `88b.    8  888          ")
-				print(" `\"Y8888o.     .8' `888.       `888. .8'     888   8   `88b.  8  888          ")
-				print("     `\"Y88b   .88ooo8888.       `888.8'      888   8     `88b.8  888     ooooo")
-				print("oo     .d8P  .8'     `888.       `888'       888   8       `888  `88.    .88' ")
-				print("8\"\"88888P'  o88o     o8888o       `8'       o888o o8o        `8   `Y8bood8P'  ")
-				print("##############################################################################")
+				printSaving()
 
 			if globalStatus_savingFlag:
 				timeToCompleteSave = globalStatus_predictedSaveEndTime - nowDatetime
@@ -120,7 +123,11 @@ if __name__ == "__main__":
 
 			globalStatus_mutex.acquire()
 			globalStatus_increment += 1
-			globalStatus_savingFlag = struct.unpack("<?", statusData[0:1])[0]
+			newSavingFlag = struct.unpack("<?", statusData[0:1])[0]
+			if not globalStatus_savingFlag and newSavingFlag:
+				winsound.Beep(2500, 200)
+				printSaving()
+			globalStatus_savingFlag = newSavingFlag
 			predictedNextSaveTimeInMs = struct.unpack("<I", statusData[1:5])[0]
 			predictedSaveEndTimeInMs = struct.unpack("<I", statusData[5:9])[0]
 			globalStatus_autosaveInterval = struct.unpack("<f", statusData[9:13])[0]

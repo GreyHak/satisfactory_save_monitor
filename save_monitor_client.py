@@ -74,7 +74,7 @@ def statusDisplayThread():
 
 			if globalStatus_savingFlag:
 				timeToCompleteSave = globalStatus_predictedSaveEndTime - nowDatetime
-				print(f"timeToCompleteSave={timeToCompleteSave}")
+				print(f"Time until save is completed: {timeToCompleteSave}")
 			else:
 				timeToNextSave = globalStatus_predictedNextSaveStartTime - nowDatetime
 				print(f"Countdown until save: {timeToNextSave}")

@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+# (c) 2022 GreyHak
+# This code is licensed under MIT license (see LICENSE for details)
 #
 # This script monitors the FactoryGame.log to detect and predict when
 # autosaves will start and complete.  This information is servered to

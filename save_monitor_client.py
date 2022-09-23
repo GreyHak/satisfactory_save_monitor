@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+# (c) 2022 GreyHak
+# This code is licensed under MIT license (see LICENSE for details)
 #
 # This client connects to save_monitor_server.py running on the Satisfactory
 # Dedicated Server which provides autosave information such as when the next

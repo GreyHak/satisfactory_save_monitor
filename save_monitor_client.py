@@ -23,6 +23,8 @@ from datetime import datetime, timedelta
 parser = argparse.ArgumentParser(description="Client for monitor Satisfactory save state.")
 parser.add_argument('--address', help='Server IP address', type=str, required=True)
 parser.add_argument('--port', help='Server TCP port', type=int, default=15001)
+parser.add_argument('--saveBeepDuration', help='Save beep duration in milliseconds (0 to disable)', type=int, default=200)
+parser.add_argument('--saveBeepFrequency', help='Save beep audio frequency (min 37, max 32767) in hertz', type=int, default=2500)
 args = parser.parse_args()
 
 globalStatus_mutex = threading.Lock()
@@ -34,7 +36,8 @@ globalStatus_autosaveInterval = 300.0  # (seconds) Default to 5 minutes
 globalStatus_lastSaveTimeLength = 0
 
 def printSavingAndBeep():
-	winsound.Beep(2500, 200)
+	if args.saveBeepDuration > 0:
+		winsound.Beep(args.saveBeepFrequency, args.saveBeepDuration)
 	print("##############################################################################")
 	print(" .oooooo..o       .o.       oooooo     oooo ooooo ooooo      ooo   .oooooo.   ")
 	print("d8P'    `Y8      .888.       `888.     .8'  `888' `888b.     `8'  d8P'  `Y8b  ")

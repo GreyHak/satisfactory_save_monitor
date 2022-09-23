@@ -38,7 +38,7 @@ To stop the daemon, persistent through reboot:  sudo systemctl disable save_moni
 ## Client
 Tested with Python 3.9.7 on Windows 10.
 
-Usage: **python save_monitor_client.py [-h] --address ADDRESS [--port PORT]**
+Usage: **python save_monitor_client.py [-h] --address ADDRESS [--port PORT] [--saveBeepDuration MILLISECONDS] [--saveBeepFrequency HERTZ]**
 
 Example: **python save_monitor_client.py --address 1.2.3.4 --port 15001**
 

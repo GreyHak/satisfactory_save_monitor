@@ -58,5 +58,7 @@ If the server is configured not to run when there are no players on, and the las
 
 If the server is configured not to run when there are no players on, and the first player logs on after a save interval, the tool is smart enough to know when the next save occurs, but its estimate is less precise than normal.  It's also unable to accurately predict the save when the first player logs in within a save interval of the last logoff, but it will resync.
 
+If player logs in before the first save, the client is informed when the save will happen, but the server doesn't yet know how long that save will take.  So it assumes it will be quick.  It'll learn on the first save.
+
 # Acknowledgement
 My thanks to Bigkahuna (Bigkahuna666#0861 on discord) for allowing me to test this save_monitor_server on his server!

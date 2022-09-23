@@ -31,7 +31,8 @@ globalStatus_predictedSaveEndTime = None
 globalStatus_autosaveInterval = 300.0  # (seconds) Default to 5 minutes
 globalStatus_lastSaveTimeLength = 0
 
-def printSaving():
+def printSavingAndBeep():
+	winsound.Beep(2500, 200)
 	print("##############################################################################")
 	print(" .oooooo..o       .o.       oooooo     oooo ooooo ooooo      ooo   .oooooo.   ")
 	print("d8P'    `Y8      .888.       `888.     .8'  `888' `888b.     `8'  d8P'  `Y8b  ")
@@ -56,9 +57,14 @@ def statusDisplayThread():
 	while True:
 		globalStatus_mutex.acquire()
 		nowDatetime = datetime.now()
-		if globalStatus_savingFlag and globalStatus_predictedSaveEndTime < nowDatetime:
-			# This either happens if the connection to the server was lost or
-			# the sever has no active users and is configured only to run with active users.
+
+		# This either happens if the connection to the server was lost or
+		# the sever has no active users and is configured only to run with active users.
+		if globalStatus_predictedSaveEndTime and globalStatus_predictedSaveEndTime < nowDatetime:
+			# This happens if the status is really old, like on client startup with a server that isn't repeatedly saving because no one is logged in.
+			if lastStatusDisplayed != globalStatus_increment:
+				print("Waiting for status from server")
+				lastStatusDisplayed = globalStatus_increment
 			pass
 		elif lastStatusDisplayed != globalStatus_increment:
 			if globalStatus_savingFlag:
@@ -69,11 +75,10 @@ def statusDisplayThread():
 			lastStatusDisplayed = globalStatus_increment
 		elif lastStatusDisplayed > 0:
 			if not globalStatus_savingFlag and nowDatetime >= globalStatus_predictedNextSaveStartTime:
-				winsound.Beep(2500, 200)
 				globalStatus_savingFlag = True
 				globalStatus_predictedSaveEndTime = globalStatus_predictedNextSaveStartTime + timedelta(seconds=globalStatus_lastSaveTimeLength)
 				globalStatus_predictedNextSaveStartTime += timedelta(seconds=(globalStatus_autosaveInterval + globalStatus_lastSaveTimeLength))
-				printSaving()
+				printSavingAndBeep()
 
 			if globalStatus_savingFlag:
 				timeToCompleteSave = globalStatus_predictedSaveEndTime - nowDatetime
@@ -125,8 +130,7 @@ if __name__ == "__main__":
 			globalStatus_increment += 1
 			newSavingFlag = struct.unpack("<?", statusData[0:1])[0]
 			if not globalStatus_savingFlag and newSavingFlag:
-				winsound.Beep(2500, 200)
-				printSaving()
+				printSavingAndBeep()
 			globalStatus_savingFlag = newSavingFlag
 			predictedNextSaveTimeInMs = struct.unpack("<I", statusData[1:5])[0]
 			predictedSaveEndTimeInMs = struct.unpack("<I", statusData[5:9])[0]

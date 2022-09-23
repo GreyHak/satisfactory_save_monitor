@@ -8,6 +8,7 @@
 #
 # Tested with Python 3.10.4 on Ubuntu 22.04.1 LTS.
 # Also tested with systemd 249 (249.11-0ubuntu3.4).
+# Also tested with Satisfactory v0.6.1.1 (#201717) (9/22/2022).
 #
 
 import argparse
@@ -68,6 +69,7 @@ def statusMonitorThread():
 		saveTriggeredFollowingLogoff = False
 		storedNextSaveStartTime = None
 		storedSaveEndTime = None
+		totalSaveTimeThisTime = 0.0
 
 		logFileSizeAtLastRead = 0
 		while True:
@@ -102,15 +104,14 @@ def statusMonitorThread():
 
 				if isLogin:
 					print(timestamp, f"Player Login: {line[54:-1]}\n")
-					if globalStatus_predictedNextSaveStartTime:
-						globalStatus_mutex.acquire()
-						if globalStatus_predictedSaveEndTime < datetime.now(timezone.utc):
-							globalStatus_increment += 1
-							globalStatus_savingFlag = False
-							globalStatus_predictedNextSaveStartTime = timestamp + timedelta(seconds=globalStatus_autosaveInterval)
-							globalStatus_predictedSaveEndTime = globalStatus_predictedNextSaveStartTime + timedelta(seconds=totalSaveTimeThisTime)
-							print(f"Predicted next save in past.  Save to end at {globalStatus_predictedSaveEndTime} with next save at {globalStatus_predictedNextSaveStartTime}\n")
-						globalStatus_mutex.release()
+					globalStatus_mutex.acquire()
+					if not globalStatus_predictedSaveEndTime or globalStatus_predictedSaveEndTime < datetime.now(timezone.utc):
+						globalStatus_increment += 1
+						globalStatus_savingFlag = False
+						globalStatus_predictedNextSaveStartTime = timestamp + timedelta(seconds=globalStatus_autosaveInterval)
+						globalStatus_predictedSaveEndTime = globalStatus_predictedNextSaveStartTime + timedelta(seconds=totalSaveTimeThisTime)
+						print(f"Predicted next save in past.  Save to end at {globalStatus_predictedSaveEndTime} with next save at {globalStatus_predictedNextSaveStartTime}\n")
+					globalStatus_mutex.release()
 				elif isLogoff:
 					print(timestamp, "Player Logoff\n")
 					lastLogoffTime = timestamp

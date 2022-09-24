@@ -118,10 +118,10 @@ def statusMonitorThread():
 					print(timestamp, "Player Logoff\n")
 					lastLogoffTime = timestamp
 				elif isAutosaveReconfig:
-					print(f"DEBUG: {line}")
-					print(f"DEBUG: {line[104:-2]}")
 					globalStatus_mutex.acquire()
-					globalStatus_autosaveInterval = float(line[104:-2])
+					# Unable to adjust presicted save time here because there is no way to know if the autosave interval
+					# from the configuration file is from here are later in the log file.  The next save will correct it.
+					globalStatus_autosaveInterval = float(line[74:-2])
 					print(timestamp, f"Operator changed autosave interval to {globalStatus_autosaveInterval} seconds")
 					globalStatus_mutex.release()
 				elif isSave1:

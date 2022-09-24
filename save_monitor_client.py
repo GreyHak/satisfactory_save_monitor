@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 parser = argparse.ArgumentParser(description="Client for monitor Satisfactory save state.")
 parser.add_argument('--address', help='Server IP address', type=str, required=True)
 parser.add_argument('--port', help='Server TCP port', type=int, default=15001)
+parser.add_argument('--rate', help='Refresh rate in seconds', type=float, default=4.99)
 parser.add_argument('--saveBeepDuration', help='Save beep duration in milliseconds (0 to disable)', type=int, default=200)
 parser.add_argument('--saveBeepFrequency', help='Save beep audio frequency (min 37, max 32767) in hertz', type=int, default=2500)
 args = parser.parse_args()
@@ -60,6 +61,7 @@ def statusDisplayThread():
 
 	lastStatusDisplayed = 0
 	while True:
+		nextSleepTimeInSeconds = args.rate
 		globalStatus_mutex.acquire()
 		nowDatetime = datetime.now()
 
@@ -75,11 +77,12 @@ def statusDisplayThread():
 			if globalStatus_savingFlag:
 				print(f"Server is in the process of saving.  Expected to complete at {globalStatus_predictedSaveEndTime} based on last save that took {globalStatus_lastSaveTimeLength} seconds.  Next save expected to start at {globalStatus_predictedNextSaveStartTime} (local time) based on {globalStatus_autosaveInterval} second interval.")
 			else:
-				print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+				print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 				print(f"Server save completed.  Save took {globalStatus_lastSaveTimeLength} seconds.  Next save expected to start at {globalStatus_predictedNextSaveStartTime} (local time) based on {globalStatus_autosaveInterval} second interval and end at {globalStatus_predictedSaveEndTime}.\n")
 			lastStatusDisplayed = globalStatus_increment
 		elif lastStatusDisplayed > 0:
 			if not globalStatus_savingFlag and nowDatetime >= globalStatus_predictedNextSaveStartTime:
+				print(f"DEBUG: Caught {(nowDatetime - globalStatus_predictedNextSaveStartTime).total_seconds()} seconds after save start")
 				globalStatus_savingFlag = True
 				globalStatus_predictedSaveEndTime = globalStatus_predictedNextSaveStartTime + timedelta(seconds=globalStatus_lastSaveTimeLength)
 				globalStatus_predictedNextSaveStartTime += timedelta(seconds=(globalStatus_autosaveInterval + globalStatus_lastSaveTimeLength))
@@ -92,8 +95,12 @@ def statusDisplayThread():
 				timeToNextSave = globalStatus_predictedNextSaveStartTime - nowDatetime
 				print(f"Countdown until save: {timeToNextSave}")
 
+				timeToNextSaveInSeconds = timeToNextSave.total_seconds()
+				if timeToNextSaveInSeconds < args.rate:
+					nextSleepTimeInSeconds = timeToNextSaveInSeconds
+
 		globalStatus_mutex.release()
-		time.sleep(1)
+		time.sleep(nextSleepTimeInSeconds)
 
 if __name__ == "__main__":
 

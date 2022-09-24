@@ -82,7 +82,7 @@ def statusDisplayThread():
 			lastStatusDisplayed = globalStatus_increment
 		elif lastStatusDisplayed > 0:
 			if not globalStatus_savingFlag and nowDatetime >= globalStatus_predictedNextSaveStartTime:
-				print(f"DEBUG: Caught {(nowDatetime - globalStatus_predictedNextSaveStartTime).total_seconds()} seconds after save start")
+				#print(f"DEBUG: Caught {(nowDatetime - globalStatus_predictedNextSaveStartTime).total_seconds()} seconds after save start")
 				globalStatus_savingFlag = True
 				globalStatus_predictedSaveEndTime = globalStatus_predictedNextSaveStartTime + timedelta(seconds=globalStatus_lastSaveTimeLength)
 				globalStatus_predictedNextSaveStartTime += timedelta(seconds=(globalStatus_autosaveInterval + globalStatus_lastSaveTimeLength))
